@@ -10,14 +10,7 @@ namespace ControlDeAcceso.Framework.DataAccess
 	{
 		public void Insert()
 		{
-			var suma = 1 + 1;
-			using (var db = new Tools.DataBase())
-			{
-				//guardo registro
-			}
-
-			//armo respuest
-			//etc
+			
 		}
 	}
 }

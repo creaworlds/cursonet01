@@ -1,33 +1,74 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Data;
 
 namespace ControlDeAcceso.Framework.Tools
 {
-	internal class DataBase : IDisposable
+	public class DataBase : IDisposable
 	{
-		private MySqlConnection conn;
+		internal MySqlConnection conn;
+
+		public readonly MySqlCommand cmd;
+		public string ConnectionName { get; set; } = "DATASERVER";
 
 		public DataBase()
 		{
-			var connStr = ConfigurationManager.ConnectionStrings["DATASERVER"].ConnectionString;
-			this.conn = new MySqlConnection(connStr);
+			this.cmd = new MySqlCommand();
 		}
 
-		public void Connecta()
+		public bool Connecta()
 		{
+			var succcess = false;
+
 			try
 			{
+				this.conn = new MySqlConnection(ConfigurationManager.ConnectionStrings[this.ConnectionName].ConnectionString);
 				this.conn.Open();
+
+				this.cmd.Connection = this.conn;
+				this.cmd.CommandType = CommandType.StoredProcedure;
+
+				succcess = (this.conn.State == System.Data.ConnectionState.Open);
 			}
 			catch (Exception ex)
 			{
-				
+
 			}
+
+			return succcess;
+		}
+
+		public DataSet GetDataSet(string sql)
+		{
+			var ds = new DataSet();
+
+			if (this.Connecta())
+			{
+				using (var da = new MySqlDataAdapter(this.cmd))
+				{
+					da.Fill(ds);
+				}
+			}
+
+			return ds;
+		}
+
+		public DataTable GetDataTable(string sql)
+		{
+			var dt = new DataTable();
+
+			if (this.Connecta())
+			{
+				this.cmd.CommandText = sql;
+
+				using (var da = new MySqlDataAdapter(this.cmd))
+				{
+					da.Fill(dt);
+				}
+			}
+
+			return dt;
 		}
 
 		public void Dispose()
@@ -45,6 +86,11 @@ namespace ControlDeAcceso.Framework.Tools
 			{
 
 			}
+		}
+
+		~DataBase()
+		{
+			this.Finaliza();
 		}
 	}
 }
